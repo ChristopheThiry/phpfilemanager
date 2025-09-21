@@ -9,9 +9,13 @@ This is a simple, single-file PHP file manager with password protection.
 -   **Directory Navigation:** Navigate through directories.
 -   **Drag-and-Drop Uploads:** Easily upload files by dragging them into the browser window.
 
+## Requirements
+
+-   PHP >= 5.3.7
+
 ## Setup
 
-1.  **Download:** Place the `index.php`, `upload.php`, and the `data` and `uploads` directories on your web server.
+1.  **Download:** Place all the files and directories (`index.php`, `upload.php`, `lib/`, `data/`, `uploads/`) on your web server.
 2.  **Permissions:** Ensure that the `data` and `uploads` directories are writable by the web server.
     ```bash
     chmod -R 755 data
