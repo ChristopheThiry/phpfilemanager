@@ -1,26 +1,6 @@
 <?php
-require_once 'lib/password.php';
-
 session_start();
-
-// Define a directory to store the password file
-define('DATA_DIR', __DIR__ . '/data');
-define('PASSWORD_FILE', DATA_DIR . '/password.php');
-
-// Function to check if a password is set
-function isPasswordSet() {
-    return file_exists(PASSWORD_FILE);
-}
-
-// Function to set the password
-function setPassword($password) {
-    if (!is_dir(DATA_DIR)) {
-        mkdir(DATA_DIR, 0755, true);
-    }
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    file_put_contents(PASSWORD_FILE, "<?php\n// Silence is golden.\n");
-    file_put_contents(PASSWORD_FILE, "<?php return '" . $hash . "';\n", LOCK_EX);
-}
+require_once 'config.php';
 
 // Function to recursively delete a directory
 function deleteDir($dirPath) {
@@ -43,37 +23,9 @@ function deleteDir($dirPath) {
 
 // Function to check the password
 function checkPassword($password) {
-    if (!isPasswordSet()) {
-        return false;
-    }
-    $hash = include(PASSWORD_FILE);
-    return password_verify($password, $hash);
-}
-
-// Handle password setup
-if (!isPasswordSet()) {
-    if (isset($_POST['set_password'])) {
-        setPassword($_POST['password']);
-        header('Location: ' . $_SERVER['PHP_SELF']);
-        exit;
-    }
-?>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Setup Password</title>
-</head>
-<body>
-    <h1>Setup Your Password</h1>
-    <form method="post">
-        <label for="password">Enter a new password:</label>
-        <input type="password" id="password" name="password" required>
-        <button type="submit" name="set_password">Set Password</button>
-    </form>
-</body>
-</html>
-<?php
-    exit;
+    global $password_hash;
+    // Note: sha1 is not a secure hashing algorithm. This is for compatibility with very old PHP versions.
+    return sha1($password) === $password_hash;
 }
 
 // Handle login
@@ -113,14 +65,14 @@ define('UPLOADS_DIR', __DIR__ . '/uploads');
 $current_dir = isset($_GET['dir']) ? realpath(UPLOADS_DIR . '/' . $_GET['dir']) : UPLOADS_DIR;
 
 // Security check to ensure the user stays within the uploads directory
-if (strpos($current_dir, UPLOADS_DIR) !== 0) {
+if (!$current_dir || strpos($current_dir, UPLOADS_DIR) !== 0) {
     $current_dir = UPLOADS_DIR;
 }
 
 // Handle file and directory creation
 if (isset($_POST['delete'])) {
     $path_to_delete = realpath(UPLOADS_DIR . '/' . $_POST['path']);
-    if (strpos($path_to_delete, UPLOADS_DIR) === 0) {
+    if ($path_to_delete && strpos($path_to_delete, UPLOADS_DIR) === 0) {
         if (is_dir($path_to_delete)) {
             deleteDir($path_to_delete);
         } else {

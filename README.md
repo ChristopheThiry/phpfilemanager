@@ -4,25 +4,29 @@ This is a simple, single-file PHP file manager with password protection.
 
 ## Features
 
--   **Password Protection:** Set a password on first use.
+-   **Password Protection:** Manually configured password for access.
 -   **File & Directory Operations:** List, create, and delete files and directories.
 -   **Directory Navigation:** Navigate through directories.
 -   **Drag-and-Drop Uploads:** Easily upload files by dragging them into the browser window.
 
 ## Requirements
 
--   PHP >= 5.3.7
+-   PHP >= 5.1
 
 ## Setup
 
-1.  **Download:** Place all the files and directories (`index.php`, `upload.php`, `lib/`, `data/`, `uploads/`) on your web server.
-2.  **Permissions:** Ensure that the `data` and `uploads` directories are writable by the web server.
+1.  **Download:** Place all the files and directories (`index.php`, `upload.php`, `config.php`, `uploads/`) on your web server.
+2.  **Configure Password:**
+    -   Open the `config.php` file in a text editor.
+    -   You need to set a SHA1 hash for your desired password. You can use an online generator or a command-line tool.
+    -   For example, to generate a hash for the password "password", you can run this in a Linux/macOS terminal: `echo -n "password" | sha1sum`
+    -   Paste the resulting hash into the `$password_hash` variable in `config.php`.
+    -   **Important:** The default password is "password". You should change this immediately.
+3.  **Permissions:** Ensure that the `uploads` directory is writable by the web server.
     ```bash
-    chmod -R 755 data
     chmod -R 755 uploads
     ```
-3.  **First Run:** Open the `index.php` file in your web browser. You will be prompted to set a password. This password will be stored securely in the `data` directory.
-4.  **Login:** After setting the password, you will be redirected to the login page. Enter the password you just created to access the file manager.
+4.  **Login:** Open the `index.php` file in your web browser. You will be prompted to enter the password you configured in step 2.
 
 ## Usage
 
