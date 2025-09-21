@@ -1,4 +1,6 @@
 <?php
+require_once 'lib/password.php';
+
 session_start();
 
 // Define a directory to store the password file
