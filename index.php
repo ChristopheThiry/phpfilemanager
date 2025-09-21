@@ -62,6 +62,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 // Main file manager interface
 define('UPLOADS_DIR', __DIR__ . '/uploads');
 
+// Create uploads directory if it doesn't exist
+if (!is_dir(UPLOADS_DIR)) {
+    mkdir(UPLOADS_DIR, 0755, true);
+}
+
 $current_dir = isset($_GET['dir']) ? realpath(UPLOADS_DIR . '/' . $_GET['dir']) : UPLOADS_DIR;
 
 // Security check to ensure the user stays within the uploads directory

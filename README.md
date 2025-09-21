@@ -15,17 +15,14 @@ This is a simple, single-file PHP file manager with password protection.
 
 ## Setup
 
-1.  **Download:** Place all the files and directories (`index.php`, `upload.php`, `config.php`, `uploads/`) on your web server.
+1.  **Download:** Place all the files (`index.php`, `upload.php`, `config.php`) on your web server. The `uploads` directory will be created automatically on the first run.
 2.  **Configure Password:**
     -   Open the `config.php` file in a text editor.
     -   You need to set a SHA1 hash for your desired password. You can use an online generator or a command-line tool.
     -   For example, to generate a hash for the password "password", you can run this in a Linux/macOS terminal: `echo -n "password" | sha1sum`
     -   Paste the resulting hash into the `$password_hash` variable in `config.php`.
     -   **Important:** The default password is "password". You should change this immediately.
-3.  **Permissions:** Ensure that the `uploads` directory is writable by the web server.
-    ```bash
-    chmod -R 755 uploads
-    ```
+3.  **Permissions:** Ensure that your web server has permission to create and write to the `uploads` directory in the same location as `index.php`.
 4.  **Login:** Open the `index.php` file in your web browser. You will be prompted to enter the password you configured in step 2.
 
 ## Usage
