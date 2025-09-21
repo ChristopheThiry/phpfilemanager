@@ -2,6 +2,32 @@
 session_start();
 require_once 'config.php';
 
+// Function to format file permissions
+function format_permissions($perms) {
+    if (($perms & 0xC000) == 0xC000) { $info = 's'; }
+    elseif (($perms & 0xA000) == 0xA000) { $info = 'l'; }
+    elseif (($perms & 0x8000) == 0x8000) { $info = '-'; }
+    elseif (($perms & 0x6000) == 0x6000) { $info = 'b'; }
+    elseif (($perms & 0x4000) == 0x4000) { $info = 'd'; }
+    elseif (($perms & 0x2000) == 0x2000) { $info = 'c'; }
+    elseif (($perms & 0x1000) == 0x1000) { $info = 'p'; }
+    else { $info = 'u'; }
+
+    $info .= (($perms & 0x0100) ? 'r' : '-');
+    $info .= (($perms & 0x0080) ? 'w' : '-');
+    $info .= (($perms & 0x0040) ? (($perms & 0x0800) ? 's' : 'x' ) : (($perms & 0x0800) ? 'S' : '-'));
+
+    $info .= (($perms & 0x0020) ? 'r' : '-');
+    $info .= (($perms & 0x0010) ? 'w' : '-');
+    $info .= (($perms & 0x0008) ? (($perms & 0x0400) ? 's' : 'x' ) : (($perms & 0x0400) ? 'S' : '-'));
+
+    $info .= (($perms & 0x0004) ? 'r' : '-');
+    $info .= (($perms & 0x0002) ? 'w' : '-');
+    $info .= (($perms & 0x0001) ? (($perms & 0x0200) ? 't' : 'x' ) : (($perms & 0x0200) ? 'T' : '-'));
+
+    return $info;
+}
+
 // Function to recursively delete a directory
 function deleteDir($dirPath) {
     if (! is_dir($dirPath)) {
@@ -113,39 +139,50 @@ $path_parts = array_filter($path_parts);
 <head>
     <title>File Manager</title>
     <style>
-        body { font-family: sans-serif; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        table { border-collapse: collapse; width: 100%; margin-top: 1em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
-        a { text-decoration: none; }
+        a { text-decoration: none; color: #007bff; }
         a:hover { text-decoration: underline; }
         .logout { float: right; }
+        .location-bar { display: flex; align-items: center; background-color: #f8f9fa; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .location-path { flex-grow: 1; font-family: monospace; }
+        .action-button { background-color: #007bff; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; margin-right: 5px; }
+        .action-button:hover { background-color: #0056b3; }
+        .action-button-delete { background-color: #dc3545; }
+        .action-button-delete:hover { background-color: #c82333; }
     </style>
 </head>
 <body>
     <h1>File Manager</h1>
     <a href="?logout=true" class="logout">Logout</a>
 
-    <p>Current Directory: /<?php echo implode('/', $path_parts); ?></p>
+    <div class="location-bar">
+        <div class="location-path">Location: <?php echo htmlspecialchars($current_dir); ?></div>
+        <?php
+        if ($current_dir !== UPLOADS_DIR) {
+            $parent_dir = dirname($current_dir);
+            $relative_parent = str_replace(UPLOADS_DIR, '', $parent_dir);
+            echo "<a href='?dir=" . urlencode($relative_parent) . "' class='action-button'>Parent Directory</a>";
+        }
+        ?>
+    </div>
 
     <table>
         <thead>
             <tr>
+                <th></th>
                 <th>Name</th>
+                <th>Last Modified</th>
                 <th>Type</th>
                 <th>Size</th>
+                <th>Perms</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php
-            // Parent directory link
-            if ($current_dir !== UPLOADS_DIR) {
-                $parent_dir = dirname($current_dir);
-                $relative_parent = str_replace(UPLOADS_DIR, '', $parent_dir);
-                echo "<tr><td><a href='?dir={$relative_parent}'>..</a></td><td>Parent Directory</td><td></td><td></td></tr>";
-            }
-
             $files = scandir($current_dir);
             foreach ($files as $file) {
                 if ($file === '.' || $file === '..') continue;
@@ -154,19 +191,25 @@ $path_parts = array_filter($path_parts);
                 $relative_path = ltrim(str_replace(UPLOADS_DIR, '', $path), '/');
             ?>
             <tr>
+                <td><?php echo $is_dir ? '&#128193;' : '&#128196;'; ?></td>
                 <td>
                     <?php if ($is_dir): ?>
-                        <a href="?dir=<?php echo urlencode($relative_path); ?>"><?php echo $file; ?></a>
+                        <a href="?dir=<?php echo urlencode($relative_path); ?>"><?php echo htmlspecialchars($file); ?></a>
                     <?php else: ?>
-                        <?php echo $file; ?>
+                        <?php echo htmlspecialchars($file); ?>
                     <?php endif; ?>
                 </td>
-                <td><?php echo $is_dir ? 'Directory' : 'File'; ?></td>
+                <td><?php echo date("Y-m-d H:i:s", filemtime($path)); ?></td>
+                <td><?php echo $is_dir ? 'Directory' : pathinfo($path, PATHINFO_EXTENSION); ?></td>
                 <td><?php echo $is_dir ? '' : filesize($path) . ' B'; ?></td>
+                <td><?php echo format_permissions(fileperms($path)); ?></td>
                 <td>
+                    <button class="action-button">Chmod</button>
+                    <button class="action-button">Move</button>
+                    <button class="action-button">Rename</button>
                     <form method="post" style="display:inline;">
                         <input type="hidden" name="path" value="<?php echo urlencode($relative_path); ?>">
-                        <button type="submit" name="delete" onclick="return confirm('Are you sure you want to delete this?');">Delete</button>
+                        <button type="submit" name="delete" class="action-button action-button-delete" onclick="return confirm('Are you sure?');">Delete</button>
                     </form>
                 </td>
             </tr>
